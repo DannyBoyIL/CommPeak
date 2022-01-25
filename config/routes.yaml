@@ -5,3 +5,21 @@ controllers:
 kernel:
     resource: ../src/Kernel.php
     type: annotation
+
+    # if the action is implemented as the __invoke() method of the
+    # controller class, you can skip the '::method_name' part:
+    # controller: App\Controller\BlogController
+    
+    # App Routes
+homepage:
+    path: /
+    controller: App\Controller\CallController::index
+    methods:    GET|HEAD
+    
+upload:
+    path: /upload
+    controller: App\Controller\CallController::upload
+  
+calls:
+    path: /calls
+    controller: App\Controller\CallController::calls

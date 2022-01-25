@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css">
+        {#        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.1.4/dist/css/datepicker-bs4.min.css">#}
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+        <style>
+            .alert {
+                margin-top: 2%;
+            }
+            .accordion {
+                margin-top: 1rem;
+                border: 2px solid lightgray;
+                border-radius: 3px;
+                padding-top: 12px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div class="container">
+
+            <div class="row justify-content-center">
+
+                <div class="col-6">
+
+                    <div class="row">
+
+                        <div class="col-12">
+                            <h1>Upload Form</h1>
+                        </div>
+
+                        <div class="w-100"></div>
+
+                        <div class="col-12">
+
+                            <form id="upload">
+
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">Please upload a file</label>
+                                    <input class="form-control form-control-sm" id="file" name="file" type="file" aria-describedby="fileHelpBlock">
+                                    <div id="fileHelpBlock" class="form-text">
+                                        Your file must be of type csv (.csv suffix).
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary">Submit</button>
+
+                                <button class="btn btn-primary" id="load">Load Records Data</button>
+
+                                <div class="ms-area alert alert-primary" role="alert"></div>
+
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <table id="table" class="table table-striped table-hover"></table>
+
+            </div>
+
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    </body>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <script>
+
+        var $ms = $('div.ms-area');
+        $ms.fadeOut(1);
+
+        function initTable($data) {
+
+            var table = $('#table').DataTable({
+                data: $data,
+                destroy: true,
+                searching: false,
+                paging: false,
+                info: false,
+                order: [[1, 'asc']],
+                columns: [
+                    {title: "#"},
+                    {title: "Custumer ID"},
+                    {title: "Calls (same continent)"},
+                    {title: "Duration (same continent)"},
+                    {title: "Total calls"},
+                    {title: "Total duration"}
+                ],
+                columnDefs: [{
+                        searchable: false,
+                        orderable: false,
+                        targets: 0
+                    }]
+            });
+
+            table.on('order.dt search.dt', function () {
+                table.column(0, {search: 'applied', order: 'applied'}).nodes().each(function (cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }).draw();
+        }
+
+        $('#load').on('click', function ($event) {
+
+            $event.preventDefault();
+            var route = '{{ url('calls') }}';
+
+            $.ajax({
+                url: route,
+                type: "GET",
+                processData: false,
+                contentType: false,
+                success: function (data) {
+                    $ms.removeClass('alert-warning')
+                            .addClass('alert-primary')
+                            .fadeIn().delay(3000).fadeOut(1000)
+                            .text(`records successfully retrieved.`);
+                    initTable(data);
+                },
+                failue: function (error, e) {
+                    console.log(error, e);
+                    $ms.removeClass('alert-primary')
+                            .addClass('alert-warning')
+                            .fadeIn().delay(3000).fadeOut(1000)
+                            .text('Couldn\'t return records. Check Console or Network for json response.');
+                }
+            });
+        });
+
+        $('#upload').on('submit', function ($event) {
+
+            $event.preventDefault();
+            var data = new FormData($event.target);
+            var route = '{{ url('upload') }}';
+
+            $.ajax({
+                url: route,
+                type: "POST",
+                processData: false,
+                contentType: false,
+                data: data,
+                success: function (data) {
+                    return $ms.removeClass('alert-warning')
+                            .addClass('alert-primary')
+                            .fadeIn().delay(3000).fadeOut(1000)
+                            .text(`${data.data} records where added!`);
+
+                },
+                failue: function (error, e) {
+                    console.log(error, e);
+                    $ms.removeClass('alert-primary')
+                            .addClass('alert-warning')
+                            .fadeIn().delay(3000).fadeOut(1000)
+                            .text('An error has occurred');
+                }
+            });
+        });
+    </script>
+</html>
